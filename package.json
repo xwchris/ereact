@@ -1,0 +1,29 @@
+{
+  "name": "simple-react",
+  "version": "1.0.0",
+  "description": "typedef VNode",
+  "main": "createElement.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xwchris/simple-react.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xwchris/simple-react/issues"
+  },
+  "homepage": "https://github.com/xwchris/simple-react#readme",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^23.6.0",
+    "regenerator-runtime": "^0.12.1"
+  }
+}
