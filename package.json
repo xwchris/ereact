@@ -7,7 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "webpack-dev-server --hot --open",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -22,8 +24,13 @@
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-jest": "^23.6.0",
+    "babel-loader": "^7.1.5",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "jest": "^23.6.0",
-    "regenerator-runtime": "^0.12.1"
+    "regenerator-runtime": "^0.12.1",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.1.9"
   }
 }
