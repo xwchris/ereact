@@ -1,4 +1,4 @@
-import { uniq } from './utils';
+import { buildComponentFromVNode } from './component';
 
 /**
  * apply differences to vnode with a given dom
@@ -15,6 +15,7 @@ const diff = (dom, vnode, parent) => {
   if (parent && rdom.parentNode !== parent) {
     parent.appendChild(rdom);
   }
+  return rdom;
 }
 
 /**
@@ -34,7 +35,7 @@ export const idiff = (dom, vnode) => {
   }
 
   // update or create a node
-  if (typeof vnode === 'string') {
+  if (typeof vnode === 'string' || typeof vnode === 'number') {
     if (dom && dom.parentNode && dom.nodeType === 3) {
       dom.nodeValue = vnode;
     } else {
@@ -42,6 +43,10 @@ export const idiff = (dom, vnode) => {
       if (dom && dom.parentNode) dom.parentNode.replaceChild(out, dom);
     }
     return out;
+  }
+
+  if (typeof vnode.type === 'function') {
+    return buildComponentFromVNode(dom, vnode);
   }
 
   if (!dom || dom.nodeName.toLowerCase() !== vnode.type) {
@@ -76,8 +81,14 @@ const diffAttribute = (dom, attributes) => {
   }
 }
 
+/**
+ * compare children
+ *
+ * @param {dom} dom dom to compare
+ * @param {array} children vnode children
+ */
 const diffChildren = (dom, children) => {
-  const originChildren = dom.children;
+  const originChildren = dom.childNodes;
   const length = children.length;
   for (let i = 0; i < length; i++) {
     const originChild = originChildren[i];
@@ -98,6 +109,13 @@ const diffChildren = (dom, children) => {
   }
 }
 
+/**
+ * set dom attribute
+ *
+ * @param {dom} dom target dom
+ * @param {string} name the property name
+ * @param {any} value the property value
+ */
 const setAccessor = (dom, name, value) => {
   // className htmlFor
   if (name === 'className') {
@@ -145,6 +163,11 @@ const setAccessor = (dom, name, value) => {
   }
 }
 
+/**
+ * event proxy
+ *
+ * @param {event} e event
+ */
 function eventProxy(e) {
   return this._listener[e.type]();
 }
