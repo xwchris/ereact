@@ -1,6 +1,4 @@
-import createElement from './src/createElement';
-import render from './src/render';
-import { Component } from './src/component';
+import { render, createElement, Component } from './src';
 // import { render, createElement, Component } from 'preact';
 
 class App extends Component {
@@ -21,8 +19,11 @@ class App extends Component {
   render() {
     return (
       <div className="component-app">
-        <h1>{this.state.count}</h1>
-        <button onClick={() => this.onAddCount()}>click me</button>
+        <div className="box">
+          <h1>{this.state.count}</h1>
+          <button onClick={() => this.onAddCount()}>click me</button>
+        </div>
+        <div>yes i am</div>
       </div>
     )
   }
@@ -31,6 +32,7 @@ class App extends Component {
 render(
   <div className="container">
     <App />
+    <h2>hello world</h2>
   </div>,
   document.getElementById('root')
 );

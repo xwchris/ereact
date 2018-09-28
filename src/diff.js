@@ -1,4 +1,5 @@
 import { buildComponentFromVNode } from './component';
+import { ATTR_KEY } from './constants';
 
 /**
  * apply differences to vnode with a given dom
@@ -37,7 +38,9 @@ export const idiff = (dom, vnode) => {
   // update or create a node
   if (typeof vnode === 'string' || typeof vnode === 'number') {
     if (dom && dom.parentNode && dom.nodeType === 3) {
-      dom.nodeValue = vnode;
+      if (dom.nodeValue !== vnode) {
+        dom.nodeValue = vnode;
+      }
     } else {
       out = document.createTextNode(vnode);
       if (dom && dom.parentNode) dom.parentNode.replaceChild(out, dom);
@@ -67,17 +70,22 @@ export const idiff = (dom, vnode) => {
  * diff attributes
  *
  * @param { dom } dom
- * @param { object } attributes - attributes need to diff
+ * @param { object } attrs - attributes need to diff
  */
 
-const diffAttribute = (dom, attributes) => {
-  for (let i = 0; i < dom.attributes; i++) {
-    const name = dom.attributes[i];
-    setAccessor(dom, name, undefined);
+const diffAttribute = (dom, attrs) => {
+  const oldAttrs = dom[ATTR_KEY] || {};
+
+  for (name in oldAttrs) {
+    if (!(attrs && attrs[name] != null) && oldAttrs[name] != null) {
+      setAccessor(dom, name, undefined);
+    }
   }
 
-  for (let name in attributes) {
-    setAccessor(dom, name, attributes[name]);
+  for (name in attrs) {
+    if (!(name in oldAttrs) || attrs[name] !== (name === 'value' || name === 'checked' ? dom[name] : oldAttrs[name])) {
+      setAccessor(dom, name, attrs[name]);
+    }
   }
 }
 
@@ -95,10 +103,12 @@ const diffChildren = (dom, children) => {
     const child = children[i];
     const resultChild = idiff(originChild, child);
 
-    if (originChild) {
-      dom.replaceChild(originChild, resultChild);
-    } else {
-      dom.appendChild(resultChild);
+    if (originChild !== resultChild) {
+      if (originChild == null) {
+        dom.appendChild(resultChild);
+      } else {
+        dom.replaceChild(originChild, resultChild);
+      }
     }
   }
 
@@ -117,6 +127,11 @@ const diffChildren = (dom, children) => {
  * @param {any} value the property value
  */
 const setAccessor = (dom, name, value) => {
+  dom[ATTR_KEY] = dom[ATTR_KEY] || {};
+  if (value != null) {
+    dom[ATTR_KEY][name] = value;
+  }
+
   // className htmlFor
   if (name === 'className') {
     name = 'class';
