@@ -12,6 +12,10 @@ class App extends Component {
     }
   }
 
+  componentDidMount() {
+    // this.button.addEventListener('click', () => this.toggle());
+  }
+
    componentWillUpdate(nextProps, nextState) {
     console.log('will update', this.state, nextState);
   }
@@ -40,11 +44,6 @@ class App extends Component {
   //   console.log('app - did update');
   // }
 
-  shouldComponentUpdate() {
-    console.log('app - should render');
-    return false;
-  }
-
   // componentWillUnmount() {
   //   console.log('app - unmount');
   // }
@@ -52,16 +51,23 @@ class App extends Component {
   toggle() {
     this.setState({
       current: this.state.current + 1
-    })
+    });
+    this.setState({
+      current: this.state.current + 1
+    });
+    this.setState({
+      current: this.state.current + 1
+    });
+    this.setState({
+      current: this.state.current + 1
+    });
   }
 
   render() {
     return (
       <div className="component-app">
-        <Home count={this.state.current}>
-          <h2>children</h2>
-        </Home>
-        <button onClick={() => this.toggle()}>toggle</button>
+        <h1>{this.state.current}</h1>
+        <button ref="">toggle</button>
       </div>
     )
   }

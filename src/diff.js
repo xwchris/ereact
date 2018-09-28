@@ -60,8 +60,10 @@ export const idiff = (dom, vnode) => {
     }
   }
 
-  diffAttribute(out, vnode.attributes);
+  // these two functions can't swap position
+  // because diffAttributes may set dangerouslySetInnerHTML which can change the structure
   diffChildren(out, vnode.children);
+  diffAttribute(out, vnode.attributes);
 
   return out;
 }
@@ -147,8 +149,7 @@ const setAccessor = (dom, name, value) => {
     if (typeof value === 'function') {
       value(dom);
     } else {
-      // TODO: this is not right
-      value.current = dom;
+      console.error('ref should be an function');
     }
   } else if (name === 'style') {
     if (typeof value === 'object') {
