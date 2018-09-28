@@ -25,6 +25,8 @@ const createElement = (type, attributes, ...children) => {
   // create and assign vnode
   const vnode = new VNode();
 
+  clonedAttributes.children = filteredChildren;
+
   vnode.type = type;
   vnode.attributes = clonedAttributes;
   vnode.children = filteredChildren;

@@ -1,5 +1,5 @@
-// import { render, createElement, Component } from './src';
-import { render, createElement, Component } from 'preact';
+import { render, createElement, Component } from './src';
+// import { render, createElement, Component } from 'preact';
 // import { render } from 'react-dom';
 // import { Component, createElement } from 'react';
 
@@ -8,52 +8,59 @@ class App extends Component {
     super(props);
 
     this.state = {
-      current: true
+      current: 0
     }
   }
 
-  componentWillMount() {
-    console.log('app - will mount');
+   componentWillUpdate(nextProps, nextState) {
+    console.log('will update', this.state, nextState);
   }
 
-  componentWillUpdate() {
-    console.log('app - will update');
+   componentDidUpdate(prevProps, prevState) {
+    console.log('did update', this.state, prevState);
   }
 
-  componentWillReceiveProps() {
-    console.log('app - will receive');
-  }
+  // componentWillMount() {
+  //   console.log('app - will mount');
+  // }
 
-  componentDidMount() {
-    console.log('app - did mount');
-  }
+  // componentWillUpdate() {
+  //   console.log('app - will update');
+  // }
 
-  componentDidUpdate() {
-    console.log('app - did update');
-  }
+  // componentWillReceiveProps() {
+  //   console.log('app - will receive');
+  // }
 
-  shouldComponentUpdate() {
-    console.log('app - should render');
-    return true;
-  }
+  // componentDidMount() {
+  //   console.log('app - did mount');
+  // }
 
-  componentWillUnmount() {
-    console.log('app - unmount');
-  }
+  // componentDidUpdate() {
+  //   console.log('app - did update');
+  // }
+
+  // shouldComponentUpdate() {
+  //   console.log('app - should render');
+  //   return true;
+  // }
+
+  // componentWillUnmount() {
+  //   console.log('app - unmount');
+  // }
 
   toggle() {
     this.setState({
-      current: !this.state.current
+      current: this.state.current + 1
     })
   }
 
   render() {
-    console.log('app - render', this.state.current);
     return (
       <div className="component-app">
-        {
-          this.state.current ? <Home /> : <Person />
-        }
+        <Home count={this.state.current}>
+          <h2>children</h2>
+        </Home>
         <button onClick={() => this.toggle()}>toggle</button>
       </div>
     )
@@ -61,70 +68,23 @@ class App extends Component {
 }
 
 class Home extends Component {
-  constructor(props) {
-    super(props);
+  // componentWillUpdate(nextProps, nextState) {
+  //   console.log('will update', nextProps, nextState);
+  // }
 
-    this.state = {
-      count: 1
-    }
+  componentWillReceiveProps(nextProps) {
+    console.log('will receive', this.props, nextProps);
   }
 
-  componentWillMount() {
-    console.log('will mount');
-  }
-
-  componentWillUpdate() {
-    console.log('will update');
-  }
-
-  componentWillReceiveProps() {
-    console.log('will receive');
-  }
-
-  componentDidMount() {
-    console.log('did mount');
-  }
-
-  componentDidUpdate() {
-    console.log('did update');
-  }
-
-  shouldComponentUpdate() {
-    console.log('should render');
-    return true;
-  }
-
-  componentWillUnmount() {
-    console.log('unmount');
-  }
-
-  onAddCount() {
-    console.log('set state');
-    this.setState({
-      count: this.state.count + 1
-    })
-  }
+  // componentDidUpdate(prevProps, prevState) {
+  //   console.log('did update', prevProps, prevState);
+  // }
 
   render() {
-    console.log('render');
     return (
       <div className="component-home">
-        <h1>{this.state.count}</h1>
-        <button onClick={() => this.onAddCount()}>add</button>
-      </div>
-    )
-  }
-}
-
-class Person extends Component {
-  componentDidMount() {
-    console.log('person did mount');
-  }
-
-  render() {
-    return (
-      <div className="component-person">
-        { name }
+        <h1>HOME {this.props.count}</h1>
+        {this.props.children}
       </div>
     )
   }

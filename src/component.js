@@ -103,7 +103,7 @@ const renderComponent = (component) => {
     if (!isUpdate && component.componentDidMount) {
       component.componentDidMount();
     } else if (isUpdate && component.componentDidUpdate) {
-      component.componentDidUpdate(props, state);
+      component.componentDidUpdate(prevProps, prevState);
     }
 
     base._component = component;
