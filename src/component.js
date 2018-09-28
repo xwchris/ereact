@@ -1,4 +1,5 @@
 import diff from './diff';
+import { FORCE_RENDER, SYNC_RENDER } from './constants';
 
 function Component (props) {
   this.props = props;
@@ -16,7 +17,7 @@ Object.assign(Component.prototype, {
   },
   forceUpdate: function(callback) {
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this);
+    renderComponent(this, FORCE_RENDER);
   },
   render: function() {}
 })
@@ -73,18 +74,19 @@ const setComponentProps = (component, props) => {
 // componentWillUpdate
 // render
 // componentDidUpdate
-const renderComponent = (component) => {
+const renderComponent = (component, renderMode = SYNC_RENDER) => {
   const props = component.props;
   const state = component.state;
   const prevProps = component.prevProps || props;
   const prevState = component.prevState || state;
   const isUpdate = !!component.base;
+  const isForceRender = renderMode === FORCE_RENDER;
   let skipRender = false;
 
   if (isUpdate) {
     component.props = prevProps;
     component.state = prevState;
-    if (component.shouldComponentUpdate && component.shouldComponentUpdate(props, state) === false) {
+    if (!isForceRender && component.shouldComponentUpdate && component.shouldComponentUpdate(props, state) === false) {
       skipRender = true;
     } else if (component.componentWillUpdate) {
       component.componentWillUpdate(props, state);

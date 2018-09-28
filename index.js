@@ -40,10 +40,10 @@ class App extends Component {
   //   console.log('app - did update');
   // }
 
-  // shouldComponentUpdate() {
-  //   console.log('app - should render');
-  //   return true;
-  // }
+  shouldComponentUpdate() {
+    console.log('app - should render');
+    return false;
+  }
 
   // componentWillUnmount() {
   //   console.log('app - unmount');
