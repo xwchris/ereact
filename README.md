@@ -1,17 +1,7 @@
-## VNode
-typedef VNode
+## NOTE
+this project is in progress now
 
-properties
-1. { string | function } nodeName
-2. { Array(VNode | string) } children
-3. { string | number | undefined } key
-4. { object } attributes
-
-## h, createElement
-return
-VNode
-
-params
-1. { string | function } nodeName
-2. { object | null } attributes
-3. { Array(VNode | string) }  children
+## TODO
+1. life cycle
+2. sync render
+3. context

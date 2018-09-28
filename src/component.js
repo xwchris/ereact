@@ -25,13 +25,19 @@ const buildComponentFromVNode = (dom, vnode) => {
   const props = vnode.attributes;
 
   let inst;
-  if (dom == null) {
+  if (dom == null || dom._component == null || dom._component.constructor !== vnode.type) {
     inst = createComponent(vnode.type, props);
+
+    const needUnmount = !!(dom && dom._component);
+    if (needUnmount && dom._component.componentWillUnmount) {
+      dom._component.componentWillUnmount();
+    }
+  } else {
+    inst = dom._component;
   }
 
   setComponentProps(inst, props);
-  dom = inst.base;
-  return dom;
+  return inst.base;
 }
 
 const createComponent = (Constructor, props) => {
@@ -41,9 +47,10 @@ const createComponent = (Constructor, props) => {
     Component.call(inst, props);
   } else {
     inst = new Component(props);
-    inst.constructor = Constructor;
-    inst.render = () => this.constructor(props);
+    inst.render = () => Constructor(props);
   }
+
+  inst.constructor = Constructor;
   return inst;
 }
 
@@ -93,9 +100,13 @@ const renderComponent = (component) => {
     const base = diff(component.base, rendered, null);
     component.base = base;
 
-    if (component.componentDidUpdate) {
+    if (!isUpdate && component.componentDidMount) {
+      component.componentDidMount();
+    } else if (isUpdate && component.componentDidUpdate) {
       component.componentDidUpdate(props, state);
     }
+
+    base._component = component;
   }
 
   while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);

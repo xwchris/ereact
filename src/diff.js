@@ -107,7 +107,7 @@ const diffChildren = (dom, children) => {
       if (originChild == null) {
         dom.appendChild(resultChild);
       } else {
-        dom.replaceChild(originChild, resultChild);
+        dom.replaceChild(resultChild, originChild);
       }
     }
   }

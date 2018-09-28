@@ -34,6 +34,8 @@
     "webpack-dev-server": "^3.1.9"
   },
   "dependencies": {
-    "preact": "^8.3.1"
+    "preact": "^8.3.1",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2"
   }
 }
