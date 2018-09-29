@@ -1,21 +1,18 @@
 {
   "name": "simple-react",
   "version": "1.0.0",
-  "description": "typedef VNode",
-  "main": "createElement.js",
-  "directories": {
-    "test": "test",
-    "build": "webpack"
-  },
+  "description": "simple alternative react",
+  "main": "./dist/simple-react.js",
   "scripts": {
     "test": "jest",
-    "build": "webpack"
+    "build": "webpack",
+    "clean": "rm -rf dist"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xwchris/simple-react.git"
   },
-  "author": "",
+  "author": "xwchris",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/xwchris/simple-react/issues"
@@ -30,7 +27,6 @@
     "jest": "^23.6.0",
     "regenerator-runtime": "^0.12.1",
     "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.1",
-    "webpack-dev-server": "^3.1.9"
+    "webpack-cli": "^3.1.1"
   }
 }

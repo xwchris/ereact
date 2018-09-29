@@ -4,7 +4,7 @@ module.exports = {
   mode: 'production',
   entry: './src/index.js',
   output: {
-    filename: 'sreact.js',
+    filename: 'simple-react.js',
     path: path.resolve(__dirname, 'dist'),
   },
   module: {
@@ -14,8 +14,5 @@ module.exports = {
         loader: 'babel-loader'
       }
     ]
-  },
-  devServer: {
-    contentBase: path.resolve(__dirname, 'dist')
   }
 }
