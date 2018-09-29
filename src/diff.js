@@ -9,9 +9,9 @@ import { ATTR_KEY } from './constants';
  * @param { dom } parent - the dom vnode need to mount
  */
 
-const diff = (dom, vnode, parent) => {
+const diff = (dom, vnode, parent, context) => {
 
-  const rdom = idiff(dom, vnode);
+  const rdom = idiff(dom, vnode, context);
 
   if (parent && rdom.parentNode !== parent) {
     parent.appendChild(rdom);
@@ -28,7 +28,7 @@ const diff = (dom, vnode, parent) => {
  * @return { dom } result dom
  */
 
-export const idiff = (dom, vnode) => {
+export const idiff = (dom, vnode, context) => {
   let out = dom;
 
   if (vnode == null || typeof vnode === 'boolean') {
@@ -49,7 +49,7 @@ export const idiff = (dom, vnode) => {
   }
 
   if (typeof vnode.type === 'function') {
-    return buildComponentFromVNode(dom, vnode);
+    return buildComponentFromVNode(dom, vnode, context);
   }
 
   if (!dom || dom.nodeName.toLowerCase() !== vnode.type) {
@@ -62,7 +62,7 @@ export const idiff = (dom, vnode) => {
 
   // these two functions can't swap position
   // because diffAttributes may set dangerouslySetInnerHTML which can change the structure
-  diffChildren(out, vnode.children);
+  diffChildren(out, vnode.children, context);
   diffAttribute(out, vnode.attributes);
 
   return out;
@@ -97,13 +97,13 @@ const diffAttribute = (dom, attrs) => {
  * @param {dom} dom dom to compare
  * @param {array} children vnode children
  */
-const diffChildren = (dom, children) => {
+const diffChildren = (dom, children, context) => {
   const originChildren = dom.childNodes;
   const length = children.length;
   for (let i = 0; i < length; i++) {
     const originChild = originChildren[i];
     const child = children[i];
-    const resultChild = idiff(originChild, child);
+    const resultChild = idiff(originChild, child, context);
 
     if (originChild !== resultChild) {
       if (originChild == null) {

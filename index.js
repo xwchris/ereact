@@ -1,5 +1,5 @@
-// import { render, createElement, Component } from './src';
-import { render, createElement, Component } from 'preact';
+import { render, createElement, Component } from './src';
+// import { render, createElement, Component } from 'preact';
 // import { render } from 'react-dom';
 // import { Component, createElement } from 'react';
 
@@ -12,16 +12,17 @@ class App extends Component {
     }
   }
 
+  getChildContext() {
+    return {
+      name: 'xwchris'
+    };
+  }
+
+  componentDidMount() {
+    console.log('context', this.context);
+  }
+
   toggle() {
-    this.setState({
-      current: this.state.current + 1
-    });
-    this.setState({
-      current: this.state.current + 1
-    });
-    this.setState({
-      current: this.state.current + 1
-    });
     this.setState({
       current: this.state.current + 1
     });
@@ -34,44 +35,53 @@ class App extends Component {
   render() {
     return (
       <div className="component-app">
-        <h1>{this.state.current}</h1>
-        <button onClick={() => this.toggle()}>add</button>
+        {/* <h1>{this.state.current}</h1>
+        <button onClick={() => this.toggle()}>add</button> */}
+        <Home />
       </div>
     )
   }
 }
 
-// class Home extends Component {
-//   constructor(props) {
-//     super(props);
+class Test extends Component {
+  getChildContext() {
+    return {
+      test: 'xiaowei'
+    }
+  }
 
-//     this.state = {
-//       count: 0
-//     }
-//   }
+  render() {
+    return (
+      <h1 className="context">
+        TEST {this.context.test}
+      </h1>
+    )
+  }
+}
 
-//   onClick() {
-//     console.log(this.props.value);
-//     this.props.parentClick();
-//     console.log(this.props.value);
-//     this.props.parentClick();
-//   }
+class Home extends Component {
+  constructor(props) {
+    super(props);
 
-//   render() {
-//     return (
-//       <div className="component-home">
-//         <h1>HOME {this.state.count}</h1>
-//         <button onClick={() => this.onClick()}>click</button>
-//       </div>
-//     )
-//   }
-// }
+    this.state = {
+      count: 0
+    }
+  }
+
+  render() {
+    return (
+      <div className="component-home">
+        <h1>HOME: {this.context.name}</h1>
+        <h1>HOME: {this.context.test}</h1>
+      </div>
+    )
+  }
+}
 
 render(
   <div className="container">
     <App />
-
-    <h2>hello world</h2>
+    <Test />
   </div>,
   document.getElementById('root')
 );

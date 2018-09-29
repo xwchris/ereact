@@ -4,9 +4,14 @@ import { defer } from './utils';
 
 const willRenderQueue = [];
 
-function Component (props) {
+function Component (props, context) {
+
+  // preact is true, here not understand
+  this._dirty = false;
+
   this.props = props;
   this.state = this.state || {};
+  this.context = context || {};
 
   this._renderCallbacks = [];
 }
@@ -25,12 +30,12 @@ Object.assign(Component.prototype, {
   render: function() {}
 })
 
-const buildComponentFromVNode = (dom, vnode) => {
+const buildComponentFromVNode = (dom, vnode, context) => {
   const props = vnode.attributes;
 
   let inst;
   if (dom == null || dom._component == null || dom._component.constructor !== vnode.type) {
-    inst = createComponent(vnode.type, props);
+    inst = createComponent(vnode.type, props, context);
 
     const needUnmount = !!(dom && dom._component);
     if (needUnmount && dom._component.componentWillUnmount) {
@@ -40,18 +45,18 @@ const buildComponentFromVNode = (dom, vnode) => {
     inst = dom._component;
   }
 
-  setComponentProps(inst, props);
+  setComponentProps(inst, props, context);
   return inst.base;
 }
 
-const createComponent = (Constructor, props) => {
+const createComponent = (Constructor, props, context) => {
   let inst;
   if (Constructor.prototype && Constructor.prototype.render) {
-    inst = new Constructor(props);
-    Component.call(inst, props);
+    inst = new Constructor(props, context);
+    Component.call(inst, props, context);
   } else {
-    inst = new Component(props);
-    inst.render = () => Constructor(props);
+    inst = new Component(props, context);
+    inst.render = () => Constructor(props, context);
   }
 
   inst.constructor = Constructor;
@@ -60,7 +65,7 @@ const createComponent = (Constructor, props) => {
 
 // componentWillMount
 // componentWillReceiveProps
-const setComponentProps = (component, props) => {
+const setComponentProps = (component, props, context) => {
   if (!component.base) {
     if (component.componentWillMount) component.componentWillMount();
   } else if (component.componentWillReceiveProps){
@@ -68,20 +73,22 @@ const setComponentProps = (component, props) => {
   }
 
   if (!component.prevProps) component.prevProps = component.props;
+  if (!component.prevContext) component.prevContext = component.context;
   component.props = props;
 
-  renderComponent(component);
+  renderComponent(component, SYNC_RENDER, context);
 }
 
 // shouldComponentUpdate
 // componentWillUpdate
 // render
 // componentDidUpdate
-const renderComponent = (component, renderMode = SYNC_RENDER) => {
+const renderComponent = (component, renderMode = SYNC_RENDER, context) => {
   const props = component.props;
   const state = component.state;
   const prevProps = component.prevProps || props;
   const prevState = component.prevState || state;
+  const prevContext = component.prevContext || context;
   const isUpdate = !!component.base;
   const isForceRender = renderMode === FORCE_RENDER;
   let skipRender = false;
@@ -95,7 +102,7 @@ const renderComponent = (component, renderMode = SYNC_RENDER) => {
       willRenderQueue.push(component);
       defer(() => {
         const willRenderedComponent = willRenderQueue.pop();
-        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent);
+        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context);
       })
     }
     return;
@@ -106,6 +113,7 @@ const renderComponent = (component, renderMode = SYNC_RENDER) => {
   if (isUpdate) {
     component.props = prevProps;
     component.state = prevState;
+    component.context = prevContext;
     if (!isForceRender && component.shouldComponentUpdate && component.shouldComponentUpdate(props, state) === false) {
       skipRender = true;
     } else if (component.componentWillUpdate) {
@@ -113,13 +121,17 @@ const renderComponent = (component, renderMode = SYNC_RENDER) => {
     }
     component.props = props;
     component.state = state;
+    component.context = context;
   }
 
-  component.prevProps = component.prevState = null;
+  component.prevProps = component.prevState = component.prevContext = null;
 
   if (!skipRender) {
     const rendered = component.render();
-    const base = diff(component.base, rendered, null);
+    if (component.getChildContext) {
+      context = Object.assign({}, context, component.getChildContext());
+    }
+    const base = diff(component.base, rendered, null, context);
     component.base = base;
 
     if (!isUpdate && component.componentDidMount) {
