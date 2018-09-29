@@ -1,5 +1,8 @@
 import diff from './diff';
-import { FORCE_RENDER, SYNC_RENDER } from './constants';
+import { FORCE_RENDER, SYNC_RENDER, ASYNC_RENDER } from './constants';
+import { defer } from './utils';
+
+const willRenderQueue = [];
 
 function Component (props) {
   this.props = props;
@@ -13,7 +16,7 @@ Object.assign(Component.prototype, {
     if (!this.prevState) this.prevState = this.state;
     this.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this);
+    renderComponent(this, ASYNC_RENDER);
   },
   forceUpdate: function(callback) {
     if (callback) this._renderCallbacks.push(callback);
@@ -82,6 +85,23 @@ const renderComponent = (component, renderMode = SYNC_RENDER) => {
   const isUpdate = !!component.base;
   const isForceRender = renderMode === FORCE_RENDER;
   let skipRender = false;
+
+  // async render
+  if (renderMode === ASYNC_RENDER) {
+    if (!component._dirty) {
+      component._dirty = true;
+
+      // maybe not correct
+      willRenderQueue.push(component);
+      defer(() => {
+        const willRenderedComponent = willRenderQueue.pop();
+        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent);
+      })
+    }
+    return;
+  }
+
+  component._dirty = false;
 
   if (isUpdate) {
     component.props = prevProps;
