@@ -4,6 +4,14 @@ import { defer } from './utils';
 
 const willRenderQueue = [];
 
+/**
+ * Component Class which need to be inherited by component
+ *
+ * @param {Object} props the props to be initialized
+ * @param {Object} context the context to be initialized
+ *
+ */
+
 function Component (props, context) {
 
   // preact is true, here not understand
@@ -17,18 +25,50 @@ function Component (props, context) {
 }
 
 Object.assign(Component.prototype, {
+  /**
+   * Change component state
+   *
+   * @param {Object} state the state will be set
+   * @param {Function} callback callback after the component rendered
+   *
+   */
+
   setState: function (state, callback) {
     if (!this.prevState) this.prevState = this.state;
     this.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
     renderComponent(this, ASYNC_RENDER);
   },
+
+
+  /**
+   * Update component force which means ignore shouldComponentUpdate hook value
+   *
+   * @param {Function} callback callback after the component rendered
+   */
+
   forceUpdate: function(callback) {
     if (callback) this._renderCallbacks.push(callback);
     renderComponent(this, FORCE_RENDER);
   },
+
+
+  /**
+   * Default render function
+   */
+
   render: function() {}
 })
+
+/**
+ * build component from VNode
+ *
+ * @param {Element} dom the dom to be contrasted
+ * @param {VNode} vnode virtual node which will be used to create component
+ * @param {Object} context component context
+ *
+ * @return component's root dom
+ */
 
 const buildComponentFromVNode = (dom, vnode, context) => {
   const props = vnode.attributes;
@@ -49,6 +89,16 @@ const buildComponentFromVNode = (dom, vnode, context) => {
   return inst.base;
 }
 
+/**
+ * create component instance
+ *
+ * @param {Function} Constructor component constructor which is class or function
+ * @param {Object} props the props to be initialized
+ * @param {Object} context the context to be initialized
+ *
+ * @return component instance
+ */
+
 const createComponent = (Constructor, props, context) => {
   let inst;
   if (Constructor.prototype && Constructor.prototype.render) {
@@ -63,8 +113,15 @@ const createComponent = (Constructor, props, context) => {
   return inst;
 }
 
-// componentWillMount
-// componentWillReceiveProps
+/**
+ * Set component props
+ *
+ * @param {Component} component component which will attach props
+ * @param {Object} props the props to be attached
+ * @param {Object} context via context
+ *
+ */
+
 const setComponentProps = (component, props, context) => {
   if (!component.base) {
     if (component.componentWillMount) component.componentWillMount();
@@ -79,10 +136,15 @@ const setComponentProps = (component, props, context) => {
   renderComponent(component, SYNC_RENDER, context);
 }
 
-// shouldComponentUpdate
-// componentWillUpdate
-// render
-// componentDidUpdate
+/**
+ * Render component to dom element
+ *
+ * @param {Component} component component instance to render
+ * @param {string} renderMode render mode
+ * @param {Object} context context to be transported to children
+ *
+ */
+
 const renderComponent = (component, renderMode = SYNC_RENDER, context) => {
   const props = component.props;
   const state = component.state;

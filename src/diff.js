@@ -2,11 +2,13 @@ import { buildComponentFromVNode } from './component';
 import { ATTR_KEY } from './constants';
 
 /**
- * apply differences to vnode with a given dom
+ * Reconciliation method
  *
- * @param { dom } dom - given dom
- * @param { VNode } vnode - vnode to diff
- * @param { dom } parent - the dom vnode need to mount
+ * @param { dom } dom given dom
+ * @param { VNode } vnode vnode to diff
+ * @param { dom } parent the dom vnode need to mount
+ *
+ * @return the result dom
  */
 
 const diff = (dom, vnode, parent, context) => {
@@ -20,10 +22,10 @@ const diff = (dom, vnode, parent, context) => {
 }
 
 /**
- * internal diff
+ * Internal reconciliation method
  *
- * @param { dom } dom - given dom
- * @param { VNode } vnode - vnode to diff
+ * @param { dom } dom given dom
+ * @param { VNode } vnode vnode to diff
  *
  * @return { dom } result dom
  */
@@ -69,10 +71,10 @@ export const idiff = (dom, vnode, context) => {
 }
 
 /**
- * diff attributes
+ * Diff attributes
  *
- * @param { dom } dom
- * @param { object } attrs - attributes need to diff
+ * @param { dom } dom dom to diff
+ * @param { object } attrs attributes need to diff
  */
 
 const diffAttribute = (dom, attrs) => {
@@ -91,12 +93,14 @@ const diffAttribute = (dom, attrs) => {
   }
 }
 
+
 /**
- * compare children
+ * Diff children
  *
- * @param {dom} dom dom to compare
+ * @param {dom} dom dom to diff
  * @param {array} children vnode children
  */
+
 const diffChildren = (dom, children, context) => {
   const originChildren = dom.childNodes;
   const length = children.length;
@@ -121,13 +125,16 @@ const diffChildren = (dom, children, context) => {
   }
 }
 
+
 /**
- * set dom attribute
+ * Set dom attribute
  *
  * @param {dom} dom target dom
  * @param {string} name the property name
  * @param {any} value the property value
+ *
  */
+
 const setAccessor = (dom, name, value) => {
   dom[ATTR_KEY] = dom[ATTR_KEY] || {};
   if (value != null) {

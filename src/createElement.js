@@ -5,7 +5,7 @@
 function VNode () {}
 
 /**
- * create vnode
+ * Create VNode element
  *
  * @param { string | function } type
  * @param { object } attributes

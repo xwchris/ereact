@@ -4,11 +4,11 @@
   "description": "typedef VNode",
   "main": "createElement.js",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "build": "webpack"
   },
   "scripts": {
     "test": "jest",
-    "dev": "webpack-dev-server --hot --open",
     "build": "webpack"
   },
   "repository": {
@@ -32,10 +32,5 @@
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.1.9"
-  },
-  "dependencies": {
-    "preact": "^8.3.1",
-    "react": "^16.5.2",
-    "react-dom": "^16.5.2"
   }
 }

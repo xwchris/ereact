@@ -1,13 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
-  devtool: 'cheap-module-source-map',
-  entry: './index.js',
+  mode: 'production',
+  entry: './src/index.js',
   output: {
-    filename: 'bundle.js',
+    filename: 'sreact.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: 'static'
   },
   module: {
     rules: [
