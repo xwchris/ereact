@@ -1,5 +1,5 @@
 {
-  "name": "simple-react",
+  "name": "@xwchris/simple-react",
   "version": "1.0.0",
   "description": "simple alternative react",
   "main": "./dist/simple-react.js",
