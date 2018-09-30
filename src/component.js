@@ -145,7 +145,7 @@ const setComponentProps = (component, props, context) => {
  *
  */
 
-const renderComponent = (component, renderMode = SYNC_RENDER, context) => {
+const renderComponent = (component, renderMode, context) => {
   const props = component.props;
   const state = component.state;
   const prevProps = component.prevProps || props;
@@ -157,11 +157,9 @@ const renderComponent = (component, renderMode = SYNC_RENDER, context) => {
 
   // async render
   if (renderMode === ASYNC_RENDER) {
-    if (!component._dirty) {
+    if (!component._dirty && willRenderQueue.push(component) === 1) {
       component._dirty = true;
 
-      // maybe not correct
-      willRenderQueue.push(component);
       defer(() => {
         const willRenderedComponent = willRenderQueue.pop();
         if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context);
