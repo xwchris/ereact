@@ -4,9 +4,9 @@ module.exports = {
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: './src/index.js',
   output: {
-    filename: 'simple-react.js',
+    filename: 'ereact.js',
     path: path.resolve(__dirname, 'dist'),
-    library: 'xwSimpleReact',
+    library: 'ereact',
     libraryTarget: 'umd'
   },
   module: {

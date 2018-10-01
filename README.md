@@ -1,4 +1,4 @@
-# Simple-React
+# Ereact
 This is an simple alternative react which has similar api with react.
 
 ## Propose

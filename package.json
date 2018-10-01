@@ -1,8 +1,8 @@
 {
-  "name": "xw-simple-react",
+  "name": "ereact",
   "version": "1.0.2",
   "description": "simple alternative react",
-  "main": "./dist/simple-react.js",
+  "main": "./dist/ereact.js",
   "scripts": {
     "test": "jest",
     "build": "webpack",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xwchris/simple-react.git"
+    "url": "git+https://github.com/xwchris/ereact.git"
   },
   "author": "xwchris",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/xwchris/simple-react/issues"
+    "url": "https://github.com/xwchris/ereact/issues"
   },
-  "homepage": "https://github.com/xwchris/simple-react#readme",
+  "homepage": "https://github.com/xwchris/ereact#readme",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-jest": "^23.6.0",
