@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "webpack",
+    "public": "NODE_ENV=production webpack",
     "clean": "rm -rf dist"
   },
   "repository": {
