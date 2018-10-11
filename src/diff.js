@@ -30,7 +30,7 @@ const diff = (dom, vnode, parent, context) => {
  * @return { dom } result dom
  */
 
-export const idiff = (dom, vnode, context) => {
+const idiff = (dom, vnode, context) => {
   let out = dom;
 
   if (vnode == null || typeof vnode === 'boolean') {
@@ -195,4 +195,4 @@ function eventProxy(e) {
   return this._listener[e.type]();
 }
 
-export default diff;
+export { diff, idiff, diffChildren };

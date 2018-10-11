@@ -1,6 +1,6 @@
-import diff from './diff';
+import { diff, diffChildren } from './diff';
 import { FORCE_RENDER, SYNC_RENDER, ASYNC_RENDER } from './constants';
-import { defer } from './utils';
+import { defer, isArray } from './utils';
 
 const willRenderQueue = [];
 
@@ -187,11 +187,19 @@ const renderComponent = (component, renderMode, context) => {
   component.prevProps = component.prevState = component.prevContext = null;
 
   if (!skipRender) {
-    const rendered = component.render();
     if (component.getChildContext) {
       context = Object.assign({}, context, component.getChildContext());
     }
-    const base = diff(component.base, rendered, null, context);
+
+    // rendered maybe an array
+    const rendered = component.render();
+    let base = null
+    if (isArray(rendered)) {
+      base = document.createDocumentFragment();
+      diffChildren(base, rendered, context);
+    } else {
+      base = diff(component.base, rendered, null, context);
+    }
     component.base = base;
 
     if (!isUpdate && component.componentDidMount) {
