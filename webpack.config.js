@@ -1,12 +1,14 @@
 const path = require('path');
+const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
 module.exports = {
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  mode,
+  devtool: mode === 'production' ? 'hidden-source-map' : 'cheap-module-eval-source-map',
   entry: './src/index.js',
   output: {
-    filename: 'ereact.js',
+    filename: `ereact.${mode}.js`,
     path: path.resolve(__dirname, 'dist'),
-    library: 'ereact',
+    library: 'EReact',
     libraryTarget: 'umd'
   },
   module: {

@@ -1,13 +1,14 @@
 {
   "name": "ereact",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "simple alternative react",
-  "main": "./dist/ereact.js",
+  "main": "./index",
   "scripts": {
-    "test": "jest",
-    "build": "webpack",
-    "public": "NODE_ENV=production webpack",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "build-production": "NODE_ENV=production webpack",
+    "build-development": "NODE_ENV=development webpack",
+    "build": "npm run build-production; npm run build-development",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -20,14 +21,19 @@
   },
   "homepage": "https://github.com/xwchris/ereact#readme",
   "devDependencies": {
-    "babel-core": "^6.26.3",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "babel-loader": "^7.1.5",
+    "babel-loader": "^8.0.4",
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "jest": "^23.6.0",
     "regenerator-runtime": "^0.12.1",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.1"
+  },
+  "dependencies": {
+    "ereact-eredux": "^1.0.3"
   }
 }

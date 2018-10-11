@@ -5,7 +5,7 @@ describe('createElement should return an vnode', () => {
   test('params attributes and children is empty', () => {
     expect(createElement('div')).toEqual({
       type: 'div',
-      attributes: {},
+      attributes: {children: []},
       children: []
     })
   })
@@ -13,7 +13,7 @@ describe('createElement should return an vnode', () => {
   test('params children is array and attributes is null', () => {
     expect(createElement('div', null, [ null, 'hello', undefined, false, true ])).toEqual({
       type: 'div',
-      attributes: {},
+      attributes: {children: [null, 'hello', undefined, false, true]},
       children: [null, 'hello', undefined, false, true]
     })
   })
@@ -22,7 +22,7 @@ describe('createElement should return an vnode', () => {
     const Home = function() {};
     expect(createElement(Home, { className: 'hello' }, 1, 2)).toEqual({
       type: Home,
-      attributes: { className: 'hello' },
+      attributes: { className: 'hello', children: [1, 2] },
       children: [1, 2]
     })
   })

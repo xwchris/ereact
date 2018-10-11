@@ -7,10 +7,12 @@
  *
  */
 
-const uniq = array =>
-  array.slice().reverse()
+const uniq = originArray => {
+  const array = originArray.slice();
+  return array.reverse()
   .filter((item, index) => array.lastIndexOf(item) === index)
   .reverse();
+}
 
 
 /**

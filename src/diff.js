@@ -118,7 +118,7 @@ const diffChildren = (dom, children, context) => {
     }
   }
 
-  if (originChildren.length > length) {
+  if ((originChildren && originChildren.length) > length) {
     for (let i = originChildren.length - 1; i >= length; i--) {
       dom.removeChild(originChildren[i]);
     }
