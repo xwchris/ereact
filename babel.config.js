@@ -3,6 +3,6 @@ module.exports = {
     "@babel/env"
   ],
   plugins: [
-    ["transform-react-jsx", { pragma: "createElement" }]
+    ["@babel/transform-react-jsx", { pragma: "createElement" }]
   ]
 }

@@ -192,7 +192,7 @@ const setAccessor = (dom, name, value) => {
  * @param {event} e event
  */
 function eventProxy(e) {
-  return this._listener[e.type]();
+  return this._listener[e.type](e);
 }
 
 export { diff, idiff, diffChildren };
