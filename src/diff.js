@@ -1,3 +1,5 @@
+'use strict';
+
 import { buildComponentFromVNode } from './component';
 import { ATTR_KEY } from './constants';
 
@@ -111,6 +113,7 @@ const diffChildren = (dom, children, context) => {
 
     if (originChild !== resultChild) {
       if (originChild == null) {
+        console.log('append', dom, resultChild.tagName);
         dom.appendChild(resultChild);
       } else {
         dom.replaceChild(resultChild, originChild);
@@ -123,6 +126,8 @@ const diffChildren = (dom, children, context) => {
       dom.removeChild(originChildren[i]);
     }
   }
+
+  return dom;
 }
 
 

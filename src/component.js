@@ -193,9 +193,10 @@ const renderComponent = (component, renderMode, context) => {
 
     // rendered maybe an array
     const rendered = component.render();
-    let base = null
+    let base = null;
     if (isArray(rendered)) {
-      base = document.createDocumentFragment();
+      // base = document.createDocumentFragment();
+      base = document.createElement('virtual');
       diffChildren(base, rendered, context);
     } else {
       base = diff(component.base, rendered, null, context);

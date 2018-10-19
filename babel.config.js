@@ -1,8 +1,10 @@
+'use strict';
+
 module.exports = {
-  presets:[
-    "@babel/env"
+  presets: [
+    '@babel/env'
   ],
   plugins: [
-    ["@babel/transform-react-jsx", { pragma: "createElement" }]
+    ['@babel/transform-react-jsx', { pragma: 'createElement' }]
   ]
-}
+};

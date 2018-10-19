@@ -1,3 +1,5 @@
+'use strict';
+
 const ATTR_KEY = '@react/__attr_key__';
 
 // Render mode constants
