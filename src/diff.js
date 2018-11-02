@@ -11,44 +11,41 @@ const createNode = element => {
   return ({ dom, element, childNodes: [] });
 }
 
-const diff = (oldNode, element, parent, context) => {
-  const node = idiff(oldNode, element, context);
-  const rdom = node.dom;
-  if (parent && rdom.parentNode !== parent) {
-    parent.appendChild(rdom);
-  }
-  return rdom;
+const diff = (oldNode = {}, element, parent, context) => {
+  idiff(oldNode, element, parent, context);
+  return parent;
 }
 
-const idiff = (oldNode, element, context) => {
+const idiff = (oldNode, element, parentDom, context) => {
   let node = oldNode;
 
   if (element && typeof element.type === 'function') {
-    return buildComponent(oldNode || {}, element, context);
+    return buildComponent(oldNode || {}, element, parentDom, context);
   }
 
   if (oldNode == null || oldNode.element == null || oldNode.element.type !== element.type) {
     node = createNode(element);
-    if (oldNode && oldNode.dom) {
-      const oldDom = oldNode.dom;
-      const dom = node.dom;
+    const oldDom = oldNode && oldNode.dom;
+    const dom = node.dom;
+
+    if (oldDom) {
 
       // 为了避免创建多余的节点
       while (oldDom.firstChild) dom.appendChild(oldDom.firstChild);
-      if (oldDom.parentNode) oldDom.parentNode.replaceChild(dom, oldDom);
+      if (parentDom) parentDom.replaceChild(dom, oldDom);
       node.dom = dom;
+    } else {
+      parentDom.appendChild(dom);
     }
-  } else if (element == null && oldNode.dom.parentNode) {
-    oldNode.dom.parentNode.removeChild(oldNode.dom);
+  } else if (element == null && parentDom) {
+    parentDom.removeChild(oldNode.dom);
   }
 
   // these two functions can't swap position
   // because diffAttributes may set dangerouslySetInnerHTML which can change the structure
   const oldChildNodes = oldNode && oldNode.childNodes || [];
-  const childNodes = diffChildren(oldChildNodes, element.children, context);
-  childNodes.map(node => node.dom).forEach(dom => {
-    node.dom.appendChild(dom);
-  });
+  const childNodes = diffChildren(oldChildNodes, element.children, node.dom, context);
+
   node.childNodes = childNodes;
 
   diffAttributes(node.dom, element.attributes);
@@ -56,11 +53,11 @@ const idiff = (oldNode, element, context) => {
   return node;
 }
 
-const diffChildren = (oldChildNodes = [], children = [], context) => {
+const diffChildren = (oldChildNodes = [], children = [], parentDom, context) => {
   const childNodes = [];
   const length = Math.max(oldChildNodes.length, children.length);
   for (let i = 0; i < length; i++) {
-    const childNode = idiff(oldChildNodes[i], children[i], context);
+    const childNode = idiff(oldChildNodes[i], children[i], parentDom, context);
     childNodes.push(childNode);
   }
   return childNodes;

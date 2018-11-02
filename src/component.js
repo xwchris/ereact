@@ -37,7 +37,7 @@ Object.assign(Component.prototype, {
     if (!this.prevState) this.prevState = this.state;
     this.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, ASYNC_RENDER, this.context, this[INTERNAL_NODE]);
+    renderComponent(this, ASYNC_RENDER, this.context, this[INTERNAL_NODE], this[INTERNAL_NODE].parentDom);
   },
 
 
@@ -49,7 +49,7 @@ Object.assign(Component.prototype, {
 
   forceUpdate: function(callback) {
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, FORCE_RENDER, this.context, this[INTERNAL_NODE]);
+    renderComponent(this, FORCE_RENDER, this.context, this[INTERNAL_NODE], this[INTERNAL_NODE].parentDom);
   },
 
 
@@ -60,7 +60,7 @@ Object.assign(Component.prototype, {
   render: function() {}
 })
 
-const buildComponent = (oldNode, element, context) => {
+const buildComponent = (oldNode, element, parentDom, context) => {
   const props = element.attributes;
 
   let component;
@@ -77,7 +77,7 @@ const buildComponent = (oldNode, element, context) => {
   }
 
   setComponentProps(component, props, context);
-  renderComponent(component, SYNC_RENDER, context, oldNode);
+  renderComponent(component, SYNC_RENDER, context, oldNode, parentDom);
   return component[INTERNAL_NODE];
 }
 
@@ -135,7 +135,7 @@ const setComponentProps = (component, props) => {
  *
  */
 
-const renderComponent = (component, renderMode, context, oldNode) => {
+const renderComponent = (component, renderMode, context, oldNode, parentDom) => {
   const props = component.props;
   const state = component.state;
   const prevProps = component.prevProps || props;
@@ -147,12 +147,12 @@ const renderComponent = (component, renderMode, context, oldNode) => {
 
   // async render
   if (renderMode === ASYNC_RENDER) {
-    if (!component._dirty && willRenderQueue.push({ component, oldNode }) === 1) {
+    if (!component._dirty && willRenderQueue.push({ component, oldNode, parentDom }) === 1) {
       component._dirty = true;
 
       defer(() => {
-        const { component: willRenderedComponent, oldNode: nextOldNode } = willRenderQueue.pop();
-        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context, nextOldNode);
+        const { component: willRenderedComponent, oldNode: nextOldNode, parentDom: nextParentDom } = willRenderQueue.pop();
+        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context, nextOldNode, nextParentDom);
       })
     }
     return;
@@ -181,22 +181,29 @@ const renderComponent = (component, renderMode, context, oldNode) => {
       context = Object.assign({}, context, component.getChildContext());
     }
 
-    let node = null;
-
     // rendered maybe an array
     const renderedElement = component.render();
     if (isArray(renderedElement)) {
-      node = diffChildren((component[INTERNAL_NODE] || {}.element), renderedElement, context);
+      const childNodes = diffChildren((component[INTERNAL_NODE] || {}).childNodes, renderedElement, parentDom, context);
+
+      component[INTERNAL_NODE] = {
+        dom: null,
+        element: renderedElement,
+        component: (component[INTERNAL_NODE] || {}).component || null,
+        childNodes: childNodes,
+        parentDom: parentDom
+      }
     } else {
       component[INTERNAL_NODE] = component[INTERNAL_NODE] || {};
-      node = idiff(component[INTERNAL_NODE], renderedElement, context);
-    }
+      const node = idiff(component[INTERNAL_NODE], renderedElement, parentDom, context);
 
-    component[INTERNAL_NODE] = {
-      dom: node.dom,
-      element: renderedElement,
-      component: (component[INTERNAL_NODE] || {}).component || null,
-      childNodes: node.childNodes || []
+      component[INTERNAL_NODE] = {
+        dom: node.dom,
+        element: renderedElement,
+        component: (component[INTERNAL_NODE] || {}).component || null,
+        childNodes: node.childNodes || [],
+        parentDom: parentDom
+      }
     }
 
     if (!isUpdate && component.componentDidMount) {
