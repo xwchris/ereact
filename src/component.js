@@ -1,5 +1,5 @@
-import { diff, diffChildren } from './diff';
-import { FORCE_RENDER, SYNC_RENDER, ASYNC_RENDER } from './constants';
+import { idiff, diffChildren } from './diff';
+import { FORCE_RENDER, SYNC_RENDER, ASYNC_RENDER, INTERNAL_NODE } from './constants';
 import { defer, isArray } from './utils';
 
 const willRenderQueue = [];
@@ -37,7 +37,7 @@ Object.assign(Component.prototype, {
     if (!this.prevState) this.prevState = this.state;
     this.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, ASYNC_RENDER);
+    renderComponent(this, ASYNC_RENDER, this.context, this[INTERNAL_NODE]);
   },
 
 
@@ -49,7 +49,7 @@ Object.assign(Component.prototype, {
 
   forceUpdate: function(callback) {
     if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, FORCE_RENDER);
+    renderComponent(this, FORCE_RENDER, this.context, this[INTERNAL_NODE]);
   },
 
 
@@ -60,33 +60,25 @@ Object.assign(Component.prototype, {
   render: function() {}
 })
 
-/**
- * build component from VNode
- *
- * @param {Element} dom the dom to be contrasted
- * @param {VNode} vnode virtual node which will be used to create component
- * @param {Object} context component context
- *
- * @return component's root dom
- */
+const buildComponent = (oldNode, element, context) => {
+  const props = element.attributes;
 
-const buildComponentFromVNode = (dom, vnode, context) => {
-  const props = vnode.attributes;
-
-  let inst;
-  if (dom == null || dom._component == null || dom._component.constructor !== vnode.type) {
-    inst = createComponent(vnode.type, props, context);
-
-    const needUnmount = !!(dom && dom._component);
-    if (needUnmount && dom._component.componentWillUnmount) {
-      dom._component.componentWillUnmount();
-    }
+  let component;
+  if (oldNode == null || oldNode.component == null || oldNode.element == null || oldNode.element.type !== element.type) {
+    component = createComponent(element.type, props, context);
+    oldNode.component = component;
+    // TODO: add unmount lifecycle
+    // const needUnmount = !!(dom && dom._component);
+    // if (needUnmount && dom._component.componentWillUnmount) {
+    //   dom._component.componentWillUnmount();
+    // }
   } else {
-    inst = dom._component;
+    component = oldNode.component;
   }
 
-  setComponentProps(inst, props, context);
-  return inst.base;
+  setComponentProps(component, props, context);
+  renderComponent(component, SYNC_RENDER, context, oldNode);
+  return component[INTERNAL_NODE];
 }
 
 /**
@@ -122,7 +114,7 @@ const createComponent = (Constructor, props, context) => {
  *
  */
 
-const setComponentProps = (component, props, context) => {
+const setComponentProps = (component, props) => {
   if (!component.base) {
     if (component.componentWillMount) component.componentWillMount();
   } else if (component.componentWillReceiveProps){
@@ -132,8 +124,6 @@ const setComponentProps = (component, props, context) => {
   if (!component.prevProps) component.prevProps = component.props;
   if (!component.prevContext) component.prevContext = component.context;
   component.props = props;
-
-  renderComponent(component, SYNC_RENDER, context);
 }
 
 /**
@@ -145,24 +135,24 @@ const setComponentProps = (component, props, context) => {
  *
  */
 
-const renderComponent = (component, renderMode, context) => {
+const renderComponent = (component, renderMode, context, oldNode) => {
   const props = component.props;
   const state = component.state;
   const prevProps = component.prevProps || props;
   const prevState = component.prevState || state;
   const prevContext = component.prevContext || context;
-  const isUpdate = !!component.base;
+  const isUpdate = !!(oldNode && oldNode.dom);
   const isForceRender = renderMode === FORCE_RENDER;
   let skipRender = false;
 
   // async render
   if (renderMode === ASYNC_RENDER) {
-    if (!component._dirty && willRenderQueue.push(component) === 1) {
+    if (!component._dirty && willRenderQueue.push({ component, oldNode }) === 1) {
       component._dirty = true;
 
       defer(() => {
-        const willRenderedComponent = willRenderQueue.pop();
-        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context);
+        const { component: willRenderedComponent, oldNode: nextOldNode } = willRenderQueue.pop();
+        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context, nextOldNode);
       })
     }
     return;
@@ -191,28 +181,32 @@ const renderComponent = (component, renderMode, context) => {
       context = Object.assign({}, context, component.getChildContext());
     }
 
+    let node = null;
+
     // rendered maybe an array
-    const rendered = component.render();
-    let base = null;
-    if (isArray(rendered)) {
-      // base = document.createDocumentFragment();
-      base = document.createElement('virtual');
-      diffChildren(base, rendered, context);
+    const renderedElement = component.render();
+    if (isArray(renderedElement)) {
+      node = diffChildren((component[INTERNAL_NODE] || {}.element), renderedElement, context);
     } else {
-      base = diff(component.base, rendered, null, context);
+      component[INTERNAL_NODE] = component[INTERNAL_NODE] || {};
+      node = idiff(component[INTERNAL_NODE], renderedElement, context);
     }
-    component.base = base;
+
+    component[INTERNAL_NODE] = {
+      dom: node.dom,
+      element: renderedElement,
+      component: (component[INTERNAL_NODE] || {}).component || null,
+      childNodes: node.childNodes || []
+    }
 
     if (!isUpdate && component.componentDidMount) {
       component.componentDidMount();
     } else if (isUpdate && component.componentDidUpdate) {
       component.componentDidUpdate(prevProps, prevState);
     }
-
-    base._component = component;
   }
 
   while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);
 }
 
-export { buildComponentFromVNode, Component };
+export { buildComponent, Component };

@@ -8,8 +8,8 @@ import { diff } from './diff';
  *
  */
 
-const render = (vnode, container) => {
-  return diff(null, vnode, container, {});
+const render = (element, container) => {
+  return diff(null, element, container, {});
 }
 
 export default render;

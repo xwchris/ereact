@@ -1,85 +1,72 @@
 'use strict';
 
-import { buildComponentFromVNode } from './component';
-import { ATTR_KEY } from './constants';
+import { buildComponent } from './component';
+import { ATTR_KEY, TEXT_ELEMENT } from './constants';
 
-/**
- * Reconciliation method
- *
- * @param { dom } dom given dom
- * @param { VNode } vnode vnode to diff
- * @param { dom } parent the dom vnode need to mount
- *
- * @return the result dom
- */
+const createNode = element => {
+  const type = element.type;
+  const isTextElement = element.type === TEXT_ELEMENT;
 
-const diff = (dom, vnode, parent, context) => {
+  const dom = isTextElement ? document.createTextNode('') : document.createElement(type);
+  return ({ dom, element, childNodes: [] });
+}
 
-  const rdom = idiff(dom, vnode, context);
-
+const diff = (oldNode, element, parent, context) => {
+  const node = idiff(oldNode, element, context);
+  const rdom = node.dom;
   if (parent && rdom.parentNode !== parent) {
     parent.appendChild(rdom);
   }
   return rdom;
 }
 
-/**
- * Internal reconciliation method
- *
- * @param { dom } dom given dom
- * @param { VNode } vnode vnode to diff
- *
- * @return { dom } result dom
- */
+const idiff = (oldNode, element, context) => {
+  let node = oldNode;
 
-const idiff = (dom, vnode, context) => {
-  let out = dom;
-
-  if (vnode == null || typeof vnode === 'boolean') {
-    vnode = ''
+  if (element && typeof element.type === 'function') {
+    return buildComponent(oldNode || {}, element, context);
   }
 
-  // update or create a node
-  if (typeof vnode === 'string' || typeof vnode === 'number') {
-    if (dom && dom.parentNode && dom.nodeType === 3) {
-      if (dom.nodeValue !== vnode) {
-        dom.nodeValue = vnode;
-      }
-    } else {
-      out = document.createTextNode(vnode);
-      if (dom && dom.parentNode) dom.parentNode.replaceChild(out, dom);
+  if (oldNode == null || oldNode.element == null || oldNode.element.type !== element.type) {
+    node = createNode(element);
+    if (oldNode && oldNode.dom) {
+      const oldDom = oldNode.dom;
+      const dom = node.dom;
+
+      // 为了避免创建多余的节点
+      while (oldDom.firstChild) dom.appendChild(oldDom.firstChild);
+      if (oldDom.parentNode) oldDom.parentNode.replaceChild(dom, oldDom);
+      node.dom = dom;
     }
-    return out;
-  }
-
-  if (typeof vnode.type === 'function') {
-    return buildComponentFromVNode(dom, vnode, context);
-  }
-
-  if (!dom || dom.nodeName.toLowerCase() !== vnode.type) {
-    out = document.createElement(vnode.type);
-    if (dom) {
-      while (dom.firstChild) out.appendChild(dom.firstChild);
-      if (dom.parentNode) dom.parentNode.replaceChild(out, dom);
-    }
+  } else if (element == null && oldNode.dom.parentNode) {
+    oldNode.dom.parentNode.removeChild(oldNode.dom);
   }
 
   // these two functions can't swap position
   // because diffAttributes may set dangerouslySetInnerHTML which can change the structure
-  diffChildren(out, vnode.children, context);
-  diffAttribute(out, vnode.attributes);
+  const oldChildNodes = oldNode && oldNode.childNodes || [];
+  const childNodes = diffChildren(oldChildNodes, element.children, context);
+  childNodes.map(node => node.dom).forEach(dom => {
+    node.dom.appendChild(dom);
+  });
+  node.childNodes = childNodes;
 
-  return out;
+  diffAttributes(node.dom, element.attributes);
+
+  return node;
 }
 
-/**
- * Diff attributes
- *
- * @param { dom } dom dom to diff
- * @param { object } attrs attributes need to diff
- */
+const diffChildren = (oldChildNodes = [], children = [], context) => {
+  const childNodes = [];
+  const length = Math.max(oldChildNodes.length, children.length);
+  for (let i = 0; i < length; i++) {
+    const childNode = idiff(oldChildNodes[i], children[i], context);
+    childNodes.push(childNode);
+  }
+  return childNodes;
+}
 
-const diffAttribute = (dom, attrs) => {
+const diffAttributes = (dom, attrs) => {
   const oldAttrs = dom[ATTR_KEY] || {};
 
   for (name in oldAttrs) {
@@ -97,41 +84,6 @@ const diffAttribute = (dom, attrs) => {
 
 
 /**
- * Diff children
- *
- * @param {dom} dom dom to diff
- * @param {array} children vnode children
- */
-
-const diffChildren = (dom, children, context) => {
-  const originChildren = dom.childNodes;
-  const length = children.length;
-  for (let i = 0; i < length; i++) {
-    const originChild = originChildren[i];
-    const child = children[i];
-    const resultChild = idiff(originChild, child, context);
-
-    if (originChild !== resultChild) {
-      if (originChild == null) {
-        console.log('append', dom, resultChild.tagName);
-        dom.appendChild(resultChild);
-      } else {
-        dom.replaceChild(resultChild, originChild);
-      }
-    }
-  }
-
-  if ((originChildren && originChildren.length) > length) {
-    for (let i = originChildren.length - 1; i >= length; i--) {
-      dom.removeChild(originChildren[i]);
-    }
-  }
-
-  return dom;
-}
-
-
-/**
  * Set dom attribute
  *
  * @param {dom} dom target dom
@@ -139,7 +91,7 @@ const diffChildren = (dom, children, context) => {
  * @param {any} value the property value
  *
  */
-
+// TODO: 测试属性设置
 const setAccessor = (dom, name, value) => {
   dom[ATTR_KEY] = dom[ATTR_KEY] || {};
   if (value != null) {
@@ -157,6 +109,8 @@ const setAccessor = (dom, name, value) => {
 
   if (name === 'key' || name === 'children' || name === 'innerHTML') {
     // ignore
+  } else if (name === 'nodeValue') {
+    dom.nodeValue = value;
   } else if (name === 'ref' && value != null) {
     if (typeof value === 'function') {
       value(dom);

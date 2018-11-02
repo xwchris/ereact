@@ -1,10 +1,14 @@
 'use strict';
 
-const ATTR_KEY = '@react/__attr_key__';
+const TEXT_ELEMENT = `@ereact/__text_element__`;
+
+const INTERNAL_NODE = '@ereact/__internal_node';
+
+const ATTR_KEY = '@ereact/__attr_key__';
 
 // Render mode constants
-const SYNC_RENDER = '@react/render_sync';
-const ASYNC_RENDER = '@react/render_async';
-const FORCE_RENDER = '@react/force_update';
+const SYNC_RENDER = '@ereact/render_sync';
+const ASYNC_RENDER = '@ereact/render_async';
+const FORCE_RENDER = '@ereact/force_update';
 
-export { ATTR_KEY, SYNC_RENDER, ASYNC_RENDER, FORCE_RENDER };
+export { ATTR_KEY, TEXT_ELEMENT, SYNC_RENDER, ASYNC_RENDER, FORCE_RENDER, INTERNAL_NODE };

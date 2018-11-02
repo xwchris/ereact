@@ -1,6 +1,7 @@
 import render from './src/render';
 import createElement from './src/createElement';
 import { Component } from './src/component';
+// import { render, createElement, Component } from 'preact';
 
 class Container extends Component {
   constructor(props) {
@@ -8,7 +9,11 @@ class Container extends Component {
   }
 
   render() {
-    return this.props.children;
+    return (
+      <div>
+        {this.props.children}
+      </div>
+    );
   }
 }
 
@@ -18,7 +23,11 @@ class SubContainer extends Component {
   }
 
   render() {
-    return this.props.children;
+    return (
+      <div>
+        {this.props.children}
+      </div>
+    );
   }
 }
 
@@ -35,13 +44,12 @@ class App extends Component {
 
   render() {
     return (
-      <Container>
-        <Container>
-          <button onClick={this.onClick}>click me</button>
-          <h1>hello world{this.state.count}</h1>
-        </Container>
-      </Container>
-    )
+      <div>
+        <h2>4</h2>
+        <button onClick={this.onClick}>click me</button>
+        <h1>{this.state.count}</h1>
+      </div>
+    );
   }
 }
 

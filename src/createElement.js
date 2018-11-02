@@ -1,3 +1,4 @@
+import { TEXT_ELEMENT } from './constants';
 
 /**
  * vnode constructor
@@ -14,24 +15,29 @@ function VNode () {}
  * @return { VNode } vnode
  */
 
-const createElement = (type, attributes, ...children) => {
+const createElement = (type, attributes, ...args) => {
 
   // shallow copy attribute
   const clonedAttributes = Object.assign({}, attributes);
 
   // flatten children and filter children
-  const filteredChildren = [].concat(...children);
+  const rawChildren = [].concat(...args);
+  const children = rawChildren
+    .filter(child => child != null && typeof child !== 'boolean')
+    .map(child => child instanceof Object ? child : createTextElement(child));
 
   // create and assign vnode
   const vnode = new VNode();
 
-  clonedAttributes.children = filteredChildren;
+  clonedAttributes.children = children;
 
   vnode.type = type;
   vnode.attributes = clonedAttributes;
-  vnode.children = filteredChildren;
+  vnode.children = children;
 
   return vnode;
 }
+
+const createTextElement = text => ({ type: TEXT_ELEMENT, attributes: { nodeValue: text }, children: [] });
 
 export default createElement;
