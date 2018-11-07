@@ -1,6 +1,6 @@
 {
   "name": "ereact",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "simple alternative react",
   "main": "./index",
   "scripts": {
@@ -22,7 +22,6 @@
   "homepage": "https://github.com/xwchris/ereact#readme",
   "devDependencies": {
     "@babel/core": "^7.1.2",
-    "@babel/plugin-transform-react-jsx": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",

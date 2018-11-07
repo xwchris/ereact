@@ -1,5 +1,4 @@
-import createElement from './createElement';
-import render from './render';
+import { render, createElement } from './render';
 import { Component } from './component';
 
 export default { createElement, render, Component };

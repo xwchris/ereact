@@ -1,219 +1,203 @@
-import { idiff, diffChildren } from './diff';
-import { FORCE_RENDER, SYNC_RENDER, ASYNC_RENDER, INTERNAL_NODE } from './constants';
-import { defer, isArray } from './utils';
+import { INTERNAL_NODE, FORCE_RENDER, ASYNC_RENDER, SYNC_RENDER } from './constants';
+import { reconcile, createNode } from './render';
+import { isArray, defer } from './utils';
 
 const willRenderQueue = [];
 
-/**
- * Component Class which need to be inherited by component
- *
- * @param {Object} props the props to be initialized
- * @param {Object} context the context to be initialized
- *
- */
-
 function Component (props, context) {
-
-  // preact is true, here not understand
   this._dirty = false;
 
-  this.props = props;
-  this.state = this.state || {};
+  this.props = props || {};
   this.context = context || {};
 
-  this._renderCallbacks = [];
+  this._renderCallbacks = []
 }
 
 Object.assign(Component.prototype, {
-  /**
-   * Change component state
-   *
-   * @param {Object} state the state will be set
-   * @param {Function} callback callback after the component rendered
-   *
-   */
-
-  setState: function (state, callback) {
-    if (!this.prevState) this.prevState = this.state;
+  setState(state, callback) {
+    if (!this.prevState) {
+      this.prevState = this.state;
+    }
     this.state = Object.assign({}, this.state, state);
-    if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, ASYNC_RENDER, this.context, this[INTERNAL_NODE], this[INTERNAL_NODE].parentDom);
+    if (typeof callback === 'function') {
+      this._renderCallbacks.push(callback);
+    }
+
+    const oldNode = this[INTERNAL_NODE];
+    const { dom, element } = oldNode;
+    const parentDom = isArray(dom) ? dom[0].parentNode : dom.parentNode;
+
+    updateComponent(ASYNC_RENDER, parentDom, oldNode, element);
   },
 
+  forceUpdate(callback) {
+    if (typeof callback === 'function') {
+      this._renderCallbacks.push(callback);
+    }
 
-  /**
-   * Update component force which means ignore shouldComponentUpdate hook value
-   *
-   * @param {Function} callback callback after the component rendered
-   */
-
-  forceUpdate: function(callback) {
-    if (callback) this._renderCallbacks.push(callback);
-    renderComponent(this, FORCE_RENDER, this.context, this[INTERNAL_NODE], this[INTERNAL_NODE].parentDom);
+    const oldNode = this[INTERNAL_NODE];
+    const { dom, element } = oldNode;
+    const parentDom = isArray(dom) ? dom[0].parentNode : dom.parentNode;
+    updateComponent(FORCE_RENDER, parentDom, oldNode, element);
   },
 
+  render() {}
+});
 
-  /**
-   * Default render function
-   */
+const buildComponent = (element, context) => {
+  const { type, props } = element;
+  let instance = null;
 
-  render: function() {}
-})
+  instance = createComponent(type, props, context);
+  setComponentProps(instance, props);
 
-const buildComponent = (oldNode, element, parentDom, context) => {
-  const props = element.attributes;
+  instance[INTERNAL_NODE] = instance[INTERNAL_NODE] || { element };
+  renderComponent(instance, context)
 
-  let component;
-  if (oldNode == null || oldNode.component == null || oldNode.element == null || oldNode.element.type !== element.type) {
-    component = createComponent(element.type, props, context);
-    oldNode.component = component;
-    // TODO: add unmount lifecycle
-    // const needUnmount = !!(dom && dom._component);
-    // if (needUnmount && dom._component.componentWillUnmount) {
-    //   dom._component.componentWillUnmount();
-    // }
-  } else {
-    component = oldNode.component;
-  }
-
-  setComponentProps(component, props, context);
-  renderComponent(component, SYNC_RENDER, context, oldNode, parentDom);
-  return component[INTERNAL_NODE];
+  return instance[INTERNAL_NODE];
 }
 
-/**
- * create component instance
- *
- * @param {Function} Constructor component constructor which is class or function
- * @param {Object} props the props to be initialized
- * @param {Object} context the context to be initialized
- *
- * @return component instance
- */
-
-const createComponent = (Constructor, props, context) => {
-  let inst;
-  if (Constructor.prototype && Constructor.prototype.render) {
-    inst = new Constructor(props, context);
-    Component.call(inst, props, context);
-  } else {
-    inst = new Component(props, context);
-    inst.render = () => Constructor(props, context);
+const updateComponent = (renderMode, parentDom, oldNode, element, context, isReceiveProps) => {
+  const instance = oldNode.instance;
+  if (isReceiveProps) {
+    setComponentProps(instance, element.props);
   }
 
-  inst.constructor = Constructor;
-  return inst;
-}
-
-/**
- * Set component props
- *
- * @param {Component} component component which will attach props
- * @param {Object} props the props to be attached
- * @param {Object} context via context
- *
- */
-
-const setComponentProps = (component, props) => {
-  if (!component.base) {
-    if (component.componentWillMount) component.componentWillMount();
-  } else if (component.componentWillReceiveProps){
-    component.componentWillReceiveProps(props);
-  }
-
-  if (!component.prevProps) component.prevProps = component.props;
-  if (!component.prevContext) component.prevContext = component.context;
-  component.props = props;
-}
-
-/**
- * Render component to dom element
- *
- * @param {Component} component component instance to render
- * @param {string} renderMode render mode
- * @param {Object} context context to be transported to children
- *
- */
-
-const renderComponent = (component, renderMode, context, oldNode, parentDom) => {
-  const props = component.props;
-  const state = component.state;
-  const prevProps = component.prevProps || props;
-  const prevState = component.prevState || state;
-  const prevContext = component.prevContext || context;
-  const isUpdate = !!(oldNode && oldNode.dom);
-  const isForceRender = renderMode === FORCE_RENDER;
+  const props = instance.props;
+  const state = instance.state;
+  const prevProps = instance.prevProps || props;
+  const prevState = instance.prevState || state;
+  const prevContext = instance.prevContext || context;
   let skipRender = false;
 
-  // async render
   if (renderMode === ASYNC_RENDER) {
-    if (!component._dirty && willRenderQueue.push({ component, oldNode, parentDom }) === 1) {
-      component._dirty = true;
+    if (!instance._dirty && willRenderQueue.push({ instance, parentDom, oldNode, element, context }) === 1) {
+      // only first time
+      instance._dirty = true;
 
       defer(() => {
-        const { component: willRenderedComponent, oldNode: nextOldNode, parentDom: nextParentDom } = willRenderQueue.pop();
-        if (willRenderedComponent._dirty) renderComponent(willRenderedComponent, SYNC_RENDER, context, nextOldNode, nextParentDom);
-      })
+        const {
+          instance: nextInstance,
+          parentDom: nextParentDom,
+          oldNode: nextOldNode,
+          element: nextElement,
+          context: nextContext,
+        } = willRenderQueue.pop();
+
+        if (nextInstance._dirty) {
+          updateComponent(SYNC_RENDER, nextParentDom, nextOldNode, nextElement, nextContext);
+        }
+      });
     }
     return;
   }
 
-  component._dirty = false;
+  instance._dirty = false;
 
-  if (isUpdate) {
-    component.props = prevProps;
-    component.state = prevState;
-    component.context = prevContext;
-    if (!isForceRender && component.shouldComponentUpdate && component.shouldComponentUpdate(props, state) === false) {
-      skipRender = true;
-    } else if (component.componentWillUpdate) {
-      component.componentWillUpdate(props, state);
-    }
-    component.props = props;
-    component.state = state;
-    component.context = context;
+  instance.props = prevProps;
+  instance.state = prevState;
+  instance.context = prevContext;
+
+  if (renderMode !== FORCE_RENDER && typeof instance.shouldComponentUpdate === 'function' && instance.shouldComponentUpdate(props, state) === false) {
+    skipRender = true;
+  } else if (typeof instance.componentWillUpdate === 'function') {
+    instance.componentWillUpdate(props, state);
   }
 
-  component.prevProps = component.prevState = component.prevContext = null;
+  instance.props = props;
+  instance.state = state;
+  instance.context = context;
+
+  instance.prevProps = instance.prevState = instance.prevContext = null;
 
   if (!skipRender) {
-    if (component.getChildContext) {
-      context = Object.assign({}, context, component.getChildContext());
+
+    if (typeof instance.getChildContext === 'function') {
+      context = Object.assign({}, context, instance.getChildContext());
     }
 
-    // rendered maybe an array
-    const renderedElement = component.render();
-    if (isArray(renderedElement)) {
-      const childNodes = diffChildren((component[INTERNAL_NODE] || {}).childNodes, renderedElement, parentDom, context);
+    const childElement = instance.render();
+    const oldChildNode = oldNode.childNode;
 
-      component[INTERNAL_NODE] = {
-        dom: null,
-        element: renderedElement,
-        component: (component[INTERNAL_NODE] || {}).component || null,
-        childNodes: childNodes,
-        parentDom: parentDom
-      }
-    } else {
-      component[INTERNAL_NODE] = component[INTERNAL_NODE] || {};
-      const node = idiff(component[INTERNAL_NODE], renderedElement, parentDom, context);
+    const childNode = reconcile(parentDom, oldChildNode, childElement, context);
 
-      component[INTERNAL_NODE] = {
-        dom: node.dom,
-        element: renderedElement,
-        component: (component[INTERNAL_NODE] || {}).component || null,
-        childNodes: node.childNodes || [],
-        parentDom: parentDom
-      }
+    const dom = isArray(childNode) ? childNode.map(n => n.dom) : childNode.dom;
+
+    Object.assign(oldNode, { dom, childNode, element });
+
+    if (typeof instance.componentDidUpdate === 'function') {
+      instance.componentDidUpdate(prevProps, prevState);
     }
 
-    if (!isUpdate && component.componentDidMount) {
-      component.componentDidMount();
-    } else if (isUpdate && component.componentDidUpdate) {
-      component.componentDidUpdate(prevProps, prevState);
+    while (instance._renderCallbacks.length) {
+      instance._renderCallbacks.pop().call(instance);
     }
   }
 
-  while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);
+  return oldNode;
 }
 
-export { buildComponent, Component };
+const createComponent = (Constructor, props, context) => {
+  let instance;
+  if (!(Constructor.prototype && Constructor.prototype.render)) {
+    const render = Constructor;
+    Constructor = function (props, context) {
+      Component.prototype.constructor.bind(this, props, context);
+    }
+    Constructor.prototype = Component.prototype;
+    Constructor.prototype.render = function() {
+      return render(this.props);
+    }
+  }
+
+  instance = new Constructor(props, context);
+  Component.call(instance, props, context);
+
+  instance.constructor = Constructor;
+  return instance;
+}
+
+const setComponentProps = (instance, props) => {
+  const isUpdate = !!instance[INTERNAL_NODE];
+  if (isUpdate && typeof instance.componentWillReceiveProps === 'function') {
+    instance.componentWillReceiveProps(props);
+  } else if (!isUpdate && typeof instance.componentWillMount === 'function'){
+    instance.componentWillMount();
+  }
+
+  if (!instance.prevProps) instance.prevProps = instance.props;
+  if (!instance.prevContext) instance.prevContext = instance.context;
+
+  instance.props = props;
+}
+
+const renderComponent = (instance, context) => {
+  instance.prevProps = instance.prevState = instance.prevContext = null;
+
+  if (typeof instance.getChildContext === 'function') {
+    context = Object.assign({}, context, instance.getChildContext());
+  }
+
+  const childElement = instance.render();
+
+  let childNode = null;
+  let dom = null;
+  if (isArray(childElement)) {
+    childNode = childElement.map(element => createNode(element, context))
+    dom = childNode.map(n => n.dom);
+  } else {
+    childNode = createNode(childElement, context);
+    dom = childNode.dom;
+  }
+  Object.assign(instance[INTERNAL_NODE], { dom, childNode, instance });
+
+  if (typeof instance.componentDidMount === 'function') {
+    instance.componentDidMount();
+  }
+
+  while (instance._renderCallbacks.length) {
+    instance._renderCallbacks.pop().call(instance);
+  }
+}
+
+export { Component, buildComponent, updateComponent };

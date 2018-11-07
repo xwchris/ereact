@@ -1,39 +1,5 @@
-/**
- * Create an duplicate-free version of an array which only the first occurrence of each element is kept.
- *
- * @param {Array} array the array to inspect
- *
- * @return the new duplicate free array
- *
- */
+export const isArray = array => typeof Array.isArray === 'function' ? Array.isArray(array) : Object.prototype.toString.call(array) === '[object Array]';
 
-const uniq = originArray => {
-  const array = originArray.slice();
-  return array.reverse()
-  .filter((item, index) => array.lastIndexOf(item) === index)
-  .reverse();
-}
+export const defer = func => typeof Promise === 'function' ? Promise.resolve().then(func) : setTimeout(func);
 
-
-/**
- * Defers invoking function until the current call stack has cleared
- *
- * @param {Function} func the function will defer
- *
- */
-
-const defer = func => {
-  if (typeof Promise === 'function') {
-    Promise.resolve().then(func);
-  } else {
-    setTimeout(func);
-  }
-}
-
-const isArray = array => {
-  return Array.isArray
-  ? Array.isArray(array)
-  : Object.prototype.toString.call(array) === '[object Array]';
-}
-
-export { uniq, defer, isArray };
+export const flatten = array => array.reduce((flat, toFlatten) => flat.concat(isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []);
