@@ -6,7 +6,7 @@ const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development
 module.exports = {
   mode,
   devtool: mode === 'production' ? 'hidden-source-map' : 'cheap-module-eval-source-map',
-  entry: './index.js',
+  entry: './src/index.js',
   output: {
     filename: `ereact.${mode}.js`,
     path: path.resolve(__dirname, 'dist'),
