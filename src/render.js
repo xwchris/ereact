@@ -93,8 +93,8 @@ const reconcile = (parentDom, oldNode, element, context) => {
 }
 
 const reconcileChildren = (oldNode, element, context) => {
-  const oldChildNodes = oldNode.childNodes || [];
-  const childElements = element.props.children || [];
+  const oldChildNodes = (oldNode.childNodes || []).filter(node => node != null);
+  const childElements = (element.props.children || []).filter(node => node != null);
   const childNodes = [];
   const length = Math.max(oldChildNodes.length, childElements.length);
   for (let i = 0; i < length; i++) {

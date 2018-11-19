@@ -27,7 +27,7 @@ Object.assign(Component.prototype, {
     const { dom, element } = oldNode;
     const parentDom = isArray(dom) ? dom[0].parentNode : dom.parentNode;
 
-    updateComponent(ASYNC_RENDER, parentDom, oldNode, element);
+    updateComponent(ASYNC_RENDER, parentDom, oldNode, element, this.context);
   },
 
   forceUpdate(callback) {
@@ -38,7 +38,7 @@ Object.assign(Component.prototype, {
     const oldNode = this[INTERNAL_NODE];
     const { dom, element } = oldNode;
     const parentDom = isArray(dom) ? dom[0].parentNode : dom.parentNode;
-    updateComponent(FORCE_RENDER, parentDom, oldNode, element);
+    updateComponent(FORCE_RENDER, parentDom, oldNode, element, this.context);
   },
 
   render() {}
@@ -126,7 +126,7 @@ const updateComponent = (renderMode, parentDom, oldNode, element, context, isRec
     Object.assign(oldNode, { dom, childNode, element });
 
     if (typeof instance.componentDidUpdate === 'function') {
-      instance.componentDidUpdate(prevProps, prevState);
+      defer(() => instance.componentDidUpdate(prevProps, prevState));
     }
 
     while (instance._renderCallbacks.length) {
@@ -140,18 +140,13 @@ const updateComponent = (renderMode, parentDom, oldNode, element, context, isRec
 const createComponent = (Constructor, props, context) => {
   let instance;
   if (!(Constructor.prototype && Constructor.prototype.render)) {
-    const render = Constructor;
-    Constructor = function (props, context) {
-      Component.prototype.constructor.bind(this, props, context);
-    }
-    Constructor.prototype = Component.prototype;
-    Constructor.prototype.render = function() {
-      return render(this.props);
-    }
+    const render = () => Constructor(props);
+    instance = new Component(props, context);
+    instance.render = render;
+  } else {
+    instance = new Constructor(props, context);
+    Component.call(instance, props, context);
   }
-
-  instance = new Constructor(props, context);
-  Component.call(instance, props, context);
 
   instance.constructor = Constructor;
   return instance;
@@ -192,7 +187,7 @@ const renderComponent = (instance, context) => {
   Object.assign(instance[INTERNAL_NODE], { dom, childNode, instance });
 
   if (typeof instance.componentDidMount === 'function') {
-    instance.componentDidMount();
+    defer(() => (instance.componentDidMount()));
   }
 
   while (instance._renderCallbacks.length) {
