@@ -85,14 +85,13 @@ const updateComponent = (renderMode, parentDom, oldNode, element, context, isRec
         } = willRenderQueue.pop();
 
         if (nextInstance._dirty) {
+          instance._dirty = false;
           updateComponent(SYNC_RENDER, nextParentDom, nextOldNode, nextElement, nextContext);
         }
       });
     }
     return;
   }
-
-  instance._dirty = false;
 
   instance.props = prevProps;
   instance.state = prevState;
