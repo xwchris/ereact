@@ -1,6 +1,6 @@
 {
   "name": "ereact",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "simple alternative react",
   "main": "./index",
   "scripts": {
